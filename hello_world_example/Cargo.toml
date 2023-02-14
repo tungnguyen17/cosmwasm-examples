@@ -8,6 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 cosmwasm-std = "=1.2.1"
+cw-storage-plus = "=1.0.1"
 serde = "=1.0.152"
 
 [dev-dependencies]
