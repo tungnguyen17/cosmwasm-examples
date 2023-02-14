@@ -1,5 +1,6 @@
 use cosmwasm_std::{
   entry_point,
+  to_binary,
   Binary,
   Deps,
   DepsMut,
@@ -9,6 +10,15 @@ use cosmwasm_std::{
   Response,
   StdResult,
 };
+use serde::{
+  Deserialize,
+  Serialize
+};
+
+#[derive(Serialize, Deserialize)]
+struct QueryResp {
+  message: String,
+}
 
 #[entry_point]
 pub fn instantiate(
@@ -18,4 +28,17 @@ pub fn instantiate(
   _msg: Empty,
 ) -> StdResult<Response> {
   Ok(Response::new())
+}
+
+#[entry_point]
+pub fn query(
+  _deps: Deps,
+  _env: Env,
+  _msg: Empty,
+) -> StdResult<Binary> {
+  let resp = QueryResp {
+    message: "Hello World".to_owned(),
+  };
+
+  to_binary(&resp)
 }
