@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "author": "Tung Nguyen",
   "scripts": {
-    "build:rs": "cargo build --target wasm32-unknown-unknown --release"
+    "build:rs": "cargo build --target wasm32-unknown-unknown --release",
+    "test:rs": "cargo test"
   }
 }

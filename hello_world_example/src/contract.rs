@@ -48,3 +48,44 @@ mod query {
     Ok(resp)
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use cosmwasm_std::{
+    from_binary,
+    testing::{
+      mock_dependencies,
+      mock_env,
+      mock_info,
+    },
+  };
+
+  #[test]
+  fn greet_query() {
+    let mut deps = mock_dependencies();
+    let env = mock_env();
+
+    instantiate(
+      deps.as_mut(),
+      env.clone(),
+      mock_info("sender", &[]),
+      Empty {},
+    )
+    .unwrap();
+
+    let resp = query(
+      deps.as_ref(),
+      env,
+      QueryMsg::Greet {}
+    ).unwrap();
+    let resp: GreetResp = from_binary(&resp).unwrap();
+
+    assert_eq!(
+      resp,
+      GreetResp {
+        message: "Hello World".to_owned()
+      }
+    );
+  }
+}
