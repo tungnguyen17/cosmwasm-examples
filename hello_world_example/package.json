@@ -1,0 +1,8 @@
+{
+  "name": "@tungnguyen17/hello_world_example",
+  "version": "1.0.0",
+  "author": "Tung Nguyen",
+  "scripts": {
+    "build:rs": "cargo build --target wasm32-unknown-unknown --release"
+  }
+}
