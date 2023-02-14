@@ -16,7 +16,12 @@ use serde::{
 };
 
 #[derive(Serialize, Deserialize)]
-struct QueryResp {
+pub enum QueryMsg {
+  Greet {},
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct GreetResp {
   message: String,
 }
 
@@ -34,11 +39,23 @@ pub fn instantiate(
 pub fn query(
   _deps: Deps,
   _env: Env,
-  _msg: Empty,
+  msg: QueryMsg,
 ) -> StdResult<Binary> {
-  let resp = QueryResp {
-    message: "Hello World".to_owned(),
-  };
+  use QueryMsg::*;
 
-  to_binary(&resp)
+  match msg {
+    Greet {} => to_binary(&query::greet()?),
+  }
+}
+
+mod query {
+  use super::*;
+
+  pub fn greet() -> StdResult<GreetResp> {
+    let resp = GreetResp {
+      message: "Hello World".to_owned(),
+    };
+
+    Ok(resp)
+  }
 }
