@@ -1,5 +1,7 @@
 use cosmwasm_std::{
+  coins,
   to_binary,
+  BankMsg,
   Binary,
   Deps,
   DepsMut,
@@ -22,6 +24,7 @@ use crate::{
   },
   state::{
     ADMINS,
+    DONATION_DENOM,
   },
 };
 
@@ -37,6 +40,7 @@ pub fn instantiate(
     .map(|addr| deps.api.addr_validate(&addr))
     .collect();
   ADMINS.save(deps.storage, &admins?)?;
+  DONATION_DENOM.save(deps.storage, &msg.donation_denom)?;
 
   Ok(Response::new())
 }
@@ -51,6 +55,7 @@ pub fn execute(
 
   match msg {
     AddMembers { admins } => exec::add_members(deps, info, admins),
+    Donate {} => exec::donate(deps, info),
     Leave {} => exec::leave(deps, info).map_err(Into::into),
   }
 }
@@ -96,6 +101,32 @@ mod exec {
 
     curr_admins.append(&mut admins?);
     ADMINS.save(deps.storage, &curr_admins)?;
+
+    Ok(resp)
+  }
+
+  pub fn donate(
+    deps: DepsMut,
+    info: MessageInfo,
+  ) -> Result<Response, ContractError> {
+    let denom = DONATION_DENOM.load(deps.storage)?;
+    let admins = ADMINS.load(deps.storage)?;
+
+    let donation = cw_utils::must_pay(&info, &denom)?.u128();
+    let donation_per_admin = donation / (admins.len() as u128);
+
+    let messages = admins.into_iter().map(
+      |admin| BankMsg::Send {
+        to_address: admin.to_string(),
+        amount: coins(donation_per_admin, &denom),
+      }
+    );
+
+    let resp = Response::new()
+      .add_messages(messages)
+      .add_attribute("action", "donate")
+      .add_attribute("amount", donation.to_string())
+      .add_attribute("per_admin", donation_per_admin.to_string());
 
     Ok(resp)
   }
@@ -157,6 +188,7 @@ mod tests {
       Addr::unchecked("owner"),
       &InstantiateMsg {
         admins: vec!["owner".to_owned()],
+        donation_denom: "eth".to_owned(),
       },
       &[],
       "Contract",
@@ -205,6 +237,75 @@ mod tests {
   }
 
   #[test]
+  fn donations() {
+    let mut app = App::new(
+      |router, _, storage| {
+        router.bank
+          .init_balance(storage, &Addr::unchecked("user"), coins(5, "eth"))
+          .unwrap()
+      }
+    );
+
+    let code = ContractWrapper::new(execute, instantiate, query);
+    let code_id = app.store_code(Box::new(code));
+
+    let addr = app.instantiate_contract(
+      code_id,
+      Addr::unchecked("owner"),
+      &InstantiateMsg {
+        admins: vec!["admin1".to_owned(), "admin2".to_owned()],
+        donation_denom: "eth".to_owned(),
+      },
+      &[],
+      "Contract",
+      None,
+    ).unwrap();
+
+    app.execute_contract(
+      Addr::unchecked("user"),
+      addr.clone(),
+      &ExecuteMsg::Donate {},
+      &coins(5, "eth"),
+    ).unwrap();
+
+    assert_eq!(
+      app.wrap()
+        .query_balance("user", "eth")
+        .unwrap()
+        .amount
+        .u128(),
+      0
+    );
+
+    assert_eq!(
+      app.wrap()
+        .query_balance(&addr, "eth")
+        .unwrap()
+        .amount
+        .u128(),
+      1
+    );
+
+    assert_eq!(
+      app.wrap()
+        .query_balance("admin1", "eth")
+        .unwrap()
+        .amount
+        .u128(),
+      2
+    );
+
+    assert_eq!(
+      app.wrap()
+        .query_balance("admin2", "eth")
+        .unwrap()
+        .amount
+        .u128(),
+      2
+    );
+  }
+
+  #[test]
   fn greet_query() {
     let mut app = App::default();
 
@@ -216,6 +317,7 @@ mod tests {
       Addr::unchecked("owner"),
       &InstantiateMsg {
         admins: Vec::new(),
+        donation_denom: "eth".to_owned(),
       },
       &[],
       "Contract",
@@ -244,7 +346,10 @@ mod tests {
     let addr = app.instantiate_contract(
       code_id,
       Addr::unchecked("owner"),
-      &InstantiateMsg { admins: vec![] },
+      &InstantiateMsg {
+        admins: vec![],
+        donation_denom: "eth".to_owned(),
+      },
       &[],
       "Contract",
       None,
@@ -260,7 +365,8 @@ mod tests {
       code_id,
       Addr::unchecked("owner"),
       &InstantiateMsg {
-          admins: vec!["admin1".to_owned(), "admin2".to_owned()],
+        admins: vec!["admin1".to_owned(), "admin2".to_owned()],
+        donation_denom: "eth".to_owned(),
       },
       &[],
       "Contract 2",
@@ -289,7 +395,10 @@ mod tests {
     let addr = app.instantiate_contract(
       code_id,
       Addr::unchecked("owner"),
-      &InstantiateMsg { admins: vec![] },
+      &InstantiateMsg {
+        admins: vec![],
+        donation_denom: "eth".to_owned(),
+      },
       &[],
       "Contract",
       None,
