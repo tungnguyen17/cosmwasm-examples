@@ -1,7 +1,7 @@
-mod contract;
-mod error;
-mod msg;
-mod state;
+pub mod contract;
+pub mod error;
+pub mod msg;
+pub mod state;
 
 use cosmwasm_std::{
   entry_point,

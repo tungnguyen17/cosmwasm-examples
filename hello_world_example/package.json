@@ -4,6 +4,7 @@
   "author": "Tung Nguyen",
   "scripts": {
     "build:rs": "cargo build --target wasm32-unknown-unknown --release",
+    "schema:rs": "cargo run schema",
     "test:rs": "cargo test"
   }
 }
