@@ -13,6 +13,7 @@ use cosmwasm_std::{
   StdResult,
 };
 use msg::{
+  ExecuteMsg,
   InstantiateMsg,
   QueryMsg,
 };
@@ -25,6 +26,16 @@ pub fn instantiate(
   msg: InstantiateMsg,
 ) -> StdResult<Response> {
   contract::instantiate(deps, env, info, msg)
+}
+
+#[entry_point]
+pub fn execute(
+  deps: DepsMut,
+  env: Env,
+  info: MessageInfo,
+  msg: ExecuteMsg
+) -> StdResult<Response> {
+  contract::execute(deps, env, info, msg)
 }
 
 #[entry_point]

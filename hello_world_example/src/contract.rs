@@ -3,7 +3,6 @@ use cosmwasm_std::{
   Binary,
   Deps,
   DepsMut,
-  Empty,
   Env,
   MessageInfo,
   Response,
@@ -12,8 +11,9 @@ use cosmwasm_std::{
 use crate::{
   msg::{
     AdminsListResp,
-    InstantiateMsg,
+    ExecuteMsg,
     GreetResp,
+    InstantiateMsg,
     QueryMsg,
   },
   state::{
@@ -37,6 +37,20 @@ pub fn instantiate(
   Ok(Response::new())
 }
 
+pub fn execute(
+  deps: DepsMut,
+  _env: Env,
+  info: MessageInfo,
+  msg: ExecuteMsg,
+) -> StdResult<Response> {
+  use ExecuteMsg::*;
+
+  match msg {
+    AddMembers { admins } => exec::add_members(deps, info, admins),
+    Leave {} => exec::leave(deps, info),
+  }
+}
+
 pub fn query(
   deps: Deps,
   _env: Env,
@@ -50,14 +64,45 @@ pub fn query(
   }
 }
 
-#[allow(dead_code)]
-pub fn execute(
-  _deps: DepsMut,
-  _env: Env,
-  _info: MessageInfo,
-  _msg: Empty,
-) -> StdResult<Response> {
-  unimplemented!()
+mod exec {
+  use super::*;
+  use cosmwasm_std::{
+    StdError,
+  };
+
+  pub fn add_members(
+    deps: DepsMut,
+    info: MessageInfo,
+    admins: Vec<String>,
+  ) -> StdResult<Response> {
+    let mut curr_admins = ADMINS.load(deps.storage)?;
+    if !curr_admins.contains(&info.sender) {
+      return Err(StdError::generic_err("Unauthorised access"));
+    }
+
+    let admins: StdResult<Vec<_>> = admins.into_iter()
+      .map(|addr| deps.api.addr_validate(&addr))
+      .collect();
+
+    curr_admins.append(&mut admins?);
+    ADMINS.save(deps.storage, &curr_admins)?;
+
+    Ok(Response::new())
+  }
+
+  pub fn leave(
+    deps: DepsMut,
+    info: MessageInfo,
+  ) -> StdResult<Response> {
+    ADMINS.update(deps.storage, move |admins| -> StdResult<_> {
+      let admins = admins.into_iter()
+        .filter(|admin| *admin != info.sender)
+        .collect();
+      Ok(admins)
+    })?;
+
+    Ok(Response::new())
+  }
 }
 
 mod query {
