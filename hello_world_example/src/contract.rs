@@ -9,6 +9,9 @@ use cosmwasm_std::{
   StdResult,
 };
 use crate::{
+  error::{
+    ContractError,
+  },
   msg::{
     AdminsListResp,
     ExecuteMsg,
@@ -42,12 +45,12 @@ pub fn execute(
   _env: Env,
   info: MessageInfo,
   msg: ExecuteMsg,
-) -> StdResult<Response> {
+) -> Result<Response, ContractError> {
   use ExecuteMsg::*;
 
   match msg {
     AddMembers { admins } => exec::add_members(deps, info, admins),
-    Leave {} => exec::leave(deps, info),
+    Leave {} => exec::leave(deps, info).map_err(Into::into),
   }
 }
 
@@ -66,18 +69,17 @@ pub fn query(
 
 mod exec {
   use super::*;
-  use cosmwasm_std::{
-    StdError,
-  };
 
   pub fn add_members(
     deps: DepsMut,
     info: MessageInfo,
     admins: Vec<String>,
-  ) -> StdResult<Response> {
+  ) -> Result<Response, ContractError> {
     let mut curr_admins = ADMINS.load(deps.storage)?;
     if !curr_admins.contains(&info.sender) {
-      return Err(StdError::generic_err("Unauthorised access"));
+      return Err(ContractError::Unauthorized {
+        sender: info.sender,
+      });
     }
 
     let admins: StdResult<Vec<_>> = admins.into_iter()
@@ -207,6 +209,39 @@ mod tests {
       AdminsListResp {
         admins: vec![Addr::unchecked("admin1"), Addr::unchecked("admin2")],
       }
+    );
+  }
+
+  #[test]
+  fn unauthorized() {
+    let mut app = App::default();
+
+    let code = ContractWrapper::new(execute, instantiate, query);
+    let code_id = app.store_code(Box::new(code));
+
+    let addr = app.instantiate_contract(
+      code_id,
+      Addr::unchecked("owner"),
+      &InstantiateMsg { admins: vec![] },
+      &[],
+      "Contract",
+      None,
+    ).unwrap();
+
+    let err = app.execute_contract(
+      Addr::unchecked("user"),
+      addr,
+      &ExecuteMsg::AddMembers {
+        admins: vec!["user".to_owned()],
+      },
+      &[],
+    ).unwrap_err();
+
+    assert_eq!(
+      ContractError::Unauthorized {
+        sender: Addr::unchecked("user")
+      },
+      err.downcast().unwrap()
     );
   }
 }

@@ -1,4 +1,5 @@
 mod contract;
+mod error;
 mod msg;
 mod state;
 
@@ -11,6 +12,9 @@ use cosmwasm_std::{
   MessageInfo,
   Response,
   StdResult,
+};
+use error::{
+  ContractError,
 };
 use msg::{
   ExecuteMsg,
@@ -34,7 +38,7 @@ pub fn execute(
   env: Env,
   info: MessageInfo,
   msg: ExecuteMsg
-) -> StdResult<Response> {
+) -> Result<Response, ContractError> {
   contract::execute(deps, env, info, msg)
 }
 
