@@ -22,7 +22,7 @@ use msg::{
   QueryMsg,
 };
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
   deps: DepsMut,
   env: Env, info:
@@ -32,7 +32,7 @@ pub fn instantiate(
   contract::instantiate(deps, env, info, msg)
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
   deps: DepsMut,
   env: Env,
@@ -42,7 +42,7 @@ pub fn execute(
   contract::execute(deps, env, info, msg)
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(
   deps: Deps,
   env: Env,
