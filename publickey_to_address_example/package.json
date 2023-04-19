@@ -1,0 +1,19 @@
+{
+  "name": "@coin98/cw-contract",
+  "version": "0.1.0",
+  "description": "Smart-contract for Cosmos blockchain",
+  "author": "Coin98 Labs",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build:rs": "cargo build --lib --target wasm32-unknown-unknown --release",
+    "build:rs:optimized": "docker run --rm -v \"$(pwd)\":/code --mount type=volume,source=\"$(basename \"$(pwd)\")_cache\",target=/code/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry cosmwasm/rust-optimizer:0.12.11",
+    "schema:rs": "cargo run schema",
+    "test:rs": "cargo test -- --nocapture"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coin98/cw-contract.git"
+  }
+}
