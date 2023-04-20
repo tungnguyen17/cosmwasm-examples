@@ -43,7 +43,7 @@ fn signature_recovery_test() {
     Addr::unchecked("wasm102nulyepw0hldz5ja5afyuzjch7u9cgk4fq5t9"),
     &InstantiateMsg {},
     &[],
-    "Contract",
+    "wasm17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgsm0v070",
     None,
   ).unwrap();
 
@@ -54,14 +54,14 @@ fn signature_recovery_test() {
     .query_wasm_smart(addr, &QueryMsg::QueryPublicKeyRecovery { message_hash, signature })
     .unwrap();
   println!("{}: keypair_pubkey = {}", testcase, signer.public_key());
-  println!("{}: response_un_pubkey = {}", testcase, resp.pubkey_hex);
-  println!("{}: response_un_pubkey_x = {}", testcase, resp.pubkey_x_hex);
-  println!("{}: response_un_pubkey_y = {}", testcase, resp.pubkey_y_hex);
-  println!("{}: response_pubkey = {}", testcase, resp.compressed_pubkey_hex);
+  println!("{}: response_uncompressed_pubkey = {}", testcase, resp.uncompressed_pubkey_hex);
+  println!("{}: response_uncompressed_pubkey_x = {}", testcase, resp.uncompressed_pubkey_x_hex);
+  println!("{}: response_uncompressed_pubkey_y = {}", testcase, resp.uncompressed_pubkey_y_hex);
+  println!("{}: response_pubkey = {}", testcase, resp.pubkey_hex);
   println!("{}: response_raw_address = {}", testcase, resp.raw_address_hex);
-  println!("{}: canonical_address = {}", testcase, resp.canonical_address);
-  println!("{}: humanized_address = {}", testcase, resp.humanized_address);
-  println!("{}: bech32_address = {}", testcase, resp.bech32_address);
+  println!("{}: response_canonical_address = {}", testcase, resp.canonical_address);
+  println!("{}: response_humanized_address = {}", testcase, resp.humanized_address);
+  println!("{}: response_bech32_address = {}", testcase, resp.bech32_address);
 }
 
 fn default_keypair(

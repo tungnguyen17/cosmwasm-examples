@@ -28,10 +28,10 @@ pub enum QueryMsg {
 
 #[cw_serde]
 pub struct QueryPublicKeyResp {
+  pub uncompressed_pubkey_hex: String,
+  pub uncompressed_pubkey_x_hex: String,
+  pub uncompressed_pubkey_y_hex: String,
   pub pubkey_hex: String,
-  pub pubkey_x_hex: String,
-  pub pubkey_y_hex: String,
-  pub compressed_pubkey_hex: String,
   pub raw_address_hex: String,
   pub canonical_address: String,
   pub humanized_address: String,
@@ -40,10 +40,10 @@ pub struct QueryPublicKeyResp {
 
 #[cw_serde]
 pub struct QueryPublicKeyRecoveryResp {
+  pub uncompressed_pubkey_hex: String,
+  pub uncompressed_pubkey_x_hex: String,
+  pub uncompressed_pubkey_y_hex: String,
   pub pubkey_hex: String,
-  pub pubkey_x_hex: String,
-  pub pubkey_y_hex: String,
-  pub compressed_pubkey_hex: String,
   pub raw_address_hex: String,
   pub canonical_address: String,
   pub humanized_address: String,
