@@ -25,5 +25,5 @@ sha2 = "~0.10.6"
 thiserror = "~1.0.34"
 
 [dev-dependencies]
-cw-multi-test = "~0.16.2"
+cw-multi-test = { git = "https://github.com/tforcexyz/cosmwasm-multi-test", branch = "v0.16.4" }
 secp256k1 = "~0.27.0"

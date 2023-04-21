@@ -9,7 +9,7 @@
   "scripts": {
     "build:rs": "cargo build --lib --target wasm32-unknown-unknown --release",
     "build:rs:optimized": "docker run --rm -v \"$(pwd)\":/code --mount type=volume,source=\"$(basename \"$(pwd)\")_cache\",target=/code/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry cosmwasm/rust-optimizer:0.12.11",
-    "schema:rs": "cargo run schema",
+    "schema:rs": "cargo run --bin schema",
     "test:rs": "cargo test -- --nocapture"
   },
   "repository": {
