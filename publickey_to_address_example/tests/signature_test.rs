@@ -18,7 +18,8 @@ use publickey_to_address::{
 };
 use secp256k1::{
   ecdsa::{
-    Signature,
+    RecoveryId,
+    RecoverableSignature,
   },
   KeyPair,
   Message,
@@ -31,8 +32,8 @@ use sha2::{
 };
 
 #[test]
-fn signature_recovery_test() {
-  let testcase = "signature_recovery_test";
+fn signature_recovery_ecdsa_test() {
+  let testcase = "signature_recovery_ecdsa_test";
 
   let mut app = App::default();
   let code = ContractWrapper::new(execute, instantiate, query);
@@ -51,9 +52,12 @@ fn signature_recovery_test() {
   let signer = default_keypair();
   let (message_hash, signature) = sign_message(message, signer);
   let resp: QueryPublicKeyRecoveryResp = app.wrap()
-    .query_wasm_smart(addr, &QueryMsg::QueryPublicKeyRecovery { message_hash, signature })
+    .query_wasm_smart(addr, &QueryMsg::QueryPublicKeyRecovery { message_hash, signature: signature.clone() })
     .unwrap();
+  let (signature, recovery_param) = signature.split_at(signature.len()-1);
   println!("{}: keypair_pubkey = {}", testcase, signer.public_key());
+  println!("{}: signature = {} ", testcase, hex::encode(&signature));
+  println!("{}: recovery_param = {}", testcase, recovery_param[0]);
   println!("{}: response_uncompressed_pubkey = {}", testcase, resp.uncompressed_pubkey_hex);
   println!("{}: response_uncompressed_pubkey_x = {}", testcase, resp.uncompressed_pubkey_x_hex);
   println!("{}: response_uncompressed_pubkey_y = {}", testcase, resp.uncompressed_pubkey_y_hex);
@@ -77,7 +81,11 @@ fn sign_message(
 ) -> (Vec<u8>, Vec<u8>) {
   let message_hash: &[u8] = &Sha256::digest(&message);
   let message_to_sign = Message::from_slice(message_hash).unwrap();
-  let signature: Signature = Secp256k1::new().sign_ecdsa(&message_to_sign, &signer.secret_key());
-  let signature_bytes: [u8; 64] = signature.serialize_compact();
-  (message_hash.to_vec(), signature_bytes.to_vec())
+  let ecdsa = Secp256k1::signing_only();
+  let signature: RecoverableSignature = ecdsa.sign_ecdsa_recoverable(&message_to_sign, &signer.secret_key());
+  let (recovery_param, signature_bytes): (RecoveryId, [u8; 64]) = signature.serialize_compact();
+  let recovery_param = if recovery_param.to_i32() == 0 { 0u8 } else { 1u8 };
+  let mut signature_bytes = signature_bytes.to_vec();
+  signature_bytes.extend_from_slice(&[recovery_param]);
+  (message_hash.to_vec(), signature_bytes)
 }

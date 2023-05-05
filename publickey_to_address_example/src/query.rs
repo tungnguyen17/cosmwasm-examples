@@ -63,8 +63,9 @@ pub fn query_pubkey_recovery(
   signature: Vec<u8>,
 ) -> StdResult<Binary> {
 
+  let (signature, recovery_param) = signature.split_at(signature.len()-1);
   let uncompressed_pubkey = deps.api
-    .secp256k1_recover_pubkey(&message_hash, &signature, 0u8).unwrap();
+    .secp256k1_recover_pubkey(&message_hash, &signature, recovery_param[0]).unwrap();
   let uncompressed_pubkey_x = &uncompressed_pubkey[1..33];
   let uncompressed_pubkey_y = &uncompressed_pubkey[33..65];
   let prefix = if uncompressed_pubkey_y[31] % 2 == 0 { 2 } else { 3 };
